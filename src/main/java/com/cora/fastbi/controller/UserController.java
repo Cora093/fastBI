@@ -6,7 +6,6 @@ import com.cora.fastbi.common.BaseResponse;
 import com.cora.fastbi.common.DeleteRequest;
 import com.cora.fastbi.common.ErrorCode;
 import com.cora.fastbi.common.ResultUtils;
-import com.cora.fastbi.config.WxOpenConfig;
 import com.cora.fastbi.constant.UserConstant;
 import com.cora.fastbi.exception.BusinessException;
 import com.cora.fastbi.exception.ThrowUtils;
@@ -47,8 +46,6 @@ public class UserController {
     @Resource
     private UserService userService;
 
-    @Resource
-    private WxOpenConfig wxOpenConfig;
 
     // region 登录相关
 

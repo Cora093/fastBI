@@ -1,22 +1,24 @@
-package com.cora.fastbi.model.entity;
-
-import com.baomidou.mybatisplus.annotation.*;
+package com.cora.fastbi.model.dto.chart;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 
 /**
- * 图表信息表
- * @TableName chart
+ * 更新请求
+ *
  */
-@TableName(value ="chart")
 @Data
-public class Chart implements Serializable {
+public class ChartUpdateRequest implements Serializable {
+
     /**
      * id
      */
-    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -45,11 +47,6 @@ public class Chart implements Serializable {
     private String generateResult;
 
     /**
-     * 创建者id
-     */
-    private Long userId;
-
-    /**
      * 创建时间
      */
     private Date createTime;
@@ -65,6 +62,5 @@ public class Chart implements Serializable {
     @TableLogic
     private Integer isDelete;
 
-    @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

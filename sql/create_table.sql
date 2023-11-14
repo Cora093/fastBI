@@ -31,6 +31,7 @@ create table if not exists fastbi.chart
 (
     id              bigint auto_increment comment 'id'
         primary key,
+    name            varchar(256)                       not null comment '图表名称',
     goal            text                               null comment '任务分析目标',
     origin_data     text                               null comment '原始输入数据',
     chart_type      varchar(128)                       null comment '图表类型',

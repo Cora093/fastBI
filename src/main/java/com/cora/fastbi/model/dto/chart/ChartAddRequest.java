@@ -15,6 +15,11 @@ public class ChartAddRequest implements Serializable {
     private String goal;
 
     /**
+     * 图表名称
+     */
+    private String name;
+
+    /**
      * 原始输入数据
      */
     private String originData;

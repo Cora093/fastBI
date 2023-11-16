@@ -10,9 +10,12 @@ import com.cora.fastbi.model.dto.chart.GenChartByAIRequest;
 import com.cora.fastbi.model.entity.User;
 import com.cora.fastbi.model.enums.FileUploadBizEnum;
 import com.cora.fastbi.service.UserService;
+import com.cora.fastbi.utils.AI.XunfeiAIUtil;
 import com.cora.fastbi.utils.ExcelUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.WebSocket;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,12 +25,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * AI接口
- *
  */
 @RestController
 @RequestMapping("/AI")
@@ -43,12 +45,12 @@ public class AIController {
      *
      * @param multipartFile
      * @param genChartByAIRequest
-     * @param request
+     * @param httpServletRequest
      * @return
      */
     @PostMapping("/gen")
     public BaseResponse<String> genChartByAI(@RequestPart("file") MultipartFile multipartFile,
-                 GenChartByAIRequest genChartByAIRequest, HttpServletRequest request) {
+                                             GenChartByAIRequest genChartByAIRequest, HttpServletRequest httpServletRequest) {
 
         // 校验参数
         String name = genChartByAIRequest.getName();
@@ -58,31 +60,34 @@ public class AIController {
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "图表名称过长");
         ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "分析目标不能为空");
 
-        // 图表数据 压缩处理
 
-        User loginUser = userService.getLoginUser(request);
-        // 文件目录：根据业务、用户来划分
-        String uuid = RandomStringUtils.randomAlphanumeric(8);
-        String filename = uuid + "-" + multipartFile.getOriginalFilename();
-        String filepath = "";
-        File file = null;
+        User loginUser = userService.getLoginUser(httpServletRequest);
+
+
+        // 图表数据压缩
+        String csv = ExcelUtils.convertExcelToCsv(multipartFile);
+        String prompt = "";// todo 增加提示词
+        String newQuestion = prompt + csv;
+
+        // 封装请求调用AI接口
         try {
-            // 暂时返回csv字符串 todo
-            return ResultUtils.success(ExcelUtils.convertExcelToCsv(multipartFile));
+            String authUrl = XunfeiAIUtil.getAuthUrl();
+            OkHttpClient client = new OkHttpClient.Builder().build();
+            String url = authUrl
+                    .replace("http://", "ws://")
+                    .replace("https://", "wss://");
+            Request request = new Request.Builder().url(url).build();
+            CompletableFuture<String> future = new CompletableFuture<>();
+            WebSocket webSocket = client.newWebSocket(request,
+                    new XunfeiAIUtil(newQuestion, loginUser.getId() + "", false, totalAnswer -> {
+                        // 当 WebSocket 连接完成时，将结果设置到 CompletableFuture
+                        future.complete(totalAnswer);
+                    }));
+            return ResultUtils.success(future.get());
         } catch (Exception e) {
-            log.error("file upload error, filepath = " + filepath, e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
-        } finally {
-            if (file != null) {
-                // 删除临时文件
-                boolean delete = file.delete();
-                if (!delete) {
-                    log.error("file delete error, filepath = {}", filepath);
-                }
-            }
+            throw new BusinessException(10000, "回调异常");
         }
     }
-
 
 
     /**

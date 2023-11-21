@@ -10,6 +10,7 @@ import com.cora.fastbi.model.dto.chart.GenChartByAIRequest;
 import com.cora.fastbi.model.entity.User;
 import com.cora.fastbi.model.enums.FileUploadBizEnum;
 import com.cora.fastbi.service.UserService;
+import com.cora.fastbi.utils.AI.AIUtils;
 import com.cora.fastbi.utils.AI.XunfeiAIUtil;
 import com.cora.fastbi.utils.ExcelUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -60,14 +61,14 @@ public class AIController {
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "图表名称过长");
         ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "分析目标不能为空");
 
-
         User loginUser = userService.getLoginUser(httpServletRequest);
-
 
         // 图表数据压缩
         String csv = ExcelUtils.convertExcelToCsv(multipartFile);
-        String prompt = "";// todo 增加提示词
-        String newQuestion = prompt + csv;
+
+        String newQuestion = AIUtils.getPrompt() +
+                "分析需求：\n" + goal +
+                "原始数据：\n" + csv;
 
         // 封装请求调用AI接口
         try {

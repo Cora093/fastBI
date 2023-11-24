@@ -1,14 +1,15 @@
 package com.cora.fastbi.controller;
 
-import cn.hutool.core.io.FileUtil;
 import com.cora.fastbi.common.BaseResponse;
 import com.cora.fastbi.common.ErrorCode;
 import com.cora.fastbi.common.ResultUtils;
 import com.cora.fastbi.exception.BusinessException;
 import com.cora.fastbi.exception.ThrowUtils;
 import com.cora.fastbi.model.dto.chart.GenChartByAIRequest;
+import com.cora.fastbi.model.entity.Chart;
 import com.cora.fastbi.model.entity.User;
-import com.cora.fastbi.model.enums.FileUploadBizEnum;
+import com.cora.fastbi.model.vo.BiResponse;
+import com.cora.fastbi.service.ChartService;
 import com.cora.fastbi.service.UserService;
 import com.cora.fastbi.utils.AI.AIUtils;
 import com.cora.fastbi.utils.AI.XunfeiAIUtil;
@@ -26,7 +27,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -40,6 +40,9 @@ public class AIController {
     @Resource
     private UserService userService;
 
+    @Resource
+    private ChartService chartService;
+
 
     /**
      * 智能分析
@@ -50,8 +53,8 @@ public class AIController {
      * @return
      */
     @PostMapping("/gen")
-    public BaseResponse<String> genChartByAI(@RequestPart("file") MultipartFile multipartFile,
-                                             GenChartByAIRequest genChartByAIRequest, HttpServletRequest httpServletRequest) {
+    public BaseResponse<BiResponse> genChartByAI(@RequestPart("file") MultipartFile multipartFile,
+                                                 GenChartByAIRequest genChartByAIRequest, HttpServletRequest httpServletRequest) {
 
         // 校验参数
         String name = genChartByAIRequest.getName();
@@ -64,11 +67,16 @@ public class AIController {
         User loginUser = userService.getLoginUser(httpServletRequest);
 
         // 图表数据压缩
-        String csv = ExcelUtils.convertExcelToCsv(multipartFile);
+        String originData = ExcelUtils.convertExcelToCsv(multipartFile);
 
-        String newQuestion = AIUtils.getPrompt() +
-                "分析需求：\n" + goal +
-                "原始数据：\n" + csv;
+        StringBuilder newQuestion = new StringBuilder(AIUtils.getPrompt());
+        newQuestion.append("分析需求：\n").append(goal);
+        if (StringUtils.isNotBlank(chartType)) {
+            newQuestion.append("，请使用图表类型：").append(chartType).append("\n");
+        }
+        newQuestion.append("原始数据：\n").append(originData);
+
+        String totalResult = "";
 
         // 封装请求调用AI接口
         try {
@@ -80,14 +88,37 @@ public class AIController {
             Request request = new Request.Builder().url(url).build();
             CompletableFuture<String> future = new CompletableFuture<>();
             WebSocket webSocket = client.newWebSocket(request,
-                    new XunfeiAIUtil(newQuestion, loginUser.getId() + "", false, totalAnswer -> {
+                    new XunfeiAIUtil(newQuestion.toString(), loginUser.getId() + "", false, totalAnswer -> {
                         // 当 WebSocket 连接完成时，将结果设置到 CompletableFuture
                         future.complete(totalAnswer);
                     }));
-            return ResultUtils.success(future.get());
+            totalResult += future.get();
+
         } catch (Exception e) {
-            throw new BusinessException(10000, "回调异常");
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "AI接口回调异常");
         }
+        String[] strings = totalResult.split("【【【");
+        String generateChart = strings[1].trim();
+        String generateResult = strings[2].trim();
+
+        // 插入到数据库
+        Chart chart = new Chart();
+        chart.setName(name);
+        chart.setGoal(goal);
+        chart.setOriginData(originData);
+        chart.setChartType(chartType);
+        chart.setGenerateChart(generateChart);
+        chart.setGenerateResult(generateResult);
+        chart.setUserId(loginUser.getId());
+        boolean saveResult = chartService.save(chart);
+        ThrowUtils.throwIf(!saveResult, ErrorCode.DATABASE_ERROR, "图表保存失败");
+
+        BiResponse biResponse = new BiResponse();
+        biResponse.setId(chart.getId());
+        biResponse.setGenerateChart(chart.getGenerateChart());
+        biResponse.setGenerateResult(chart.getGenerateResult());
+
+        return ResultUtils.success(biResponse);
     }
 
 
@@ -97,6 +128,7 @@ public class AIController {
      * @param multipartFile
      * @param fileUploadBizEnum 业务类型
      */
+    /*
     private void validFile(MultipartFile multipartFile, FileUploadBizEnum fileUploadBizEnum) {
         // 文件大小
         long fileSize = multipartFile.getSize();
@@ -112,4 +144,5 @@ public class AIController {
             }
         }
     }
+    */
 }

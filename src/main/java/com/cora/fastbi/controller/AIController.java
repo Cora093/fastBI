@@ -1,5 +1,6 @@
 package com.cora.fastbi.controller;
 
+import cn.hutool.core.io.FileUtil;
 import com.cora.fastbi.common.BaseResponse;
 import com.cora.fastbi.common.ErrorCode;
 import com.cora.fastbi.common.ResultUtils;
@@ -27,6 +28,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -55,14 +59,22 @@ public class AIController {
     @PostMapping("/gen")
     public BaseResponse<BiResponse> genChartByAI(@RequestPart("file") MultipartFile multipartFile,
                                                  GenChartByAIRequest genChartByAIRequest, HttpServletRequest httpServletRequest) {
-
-        // 校验参数
         String name = genChartByAIRequest.getName();
         String goal = genChartByAIRequest.getGoal();
         String chartType = genChartByAIRequest.getChartType();
+        // 校验参数
         ThrowUtils.throwIf(StringUtils.isBlank(name), ErrorCode.PARAMS_ERROR, "图表名称不能为空");
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "图表名称过长");
         ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "分析目标不能为空");
+        // 校验文件
+        ThrowUtils.throwIf(multipartFile == null || multipartFile.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
+        long size = multipartFile.getSize();
+        ThrowUtils.throwIf(size > 1024 * 1024 * 10, ErrorCode.PARAMS_ERROR, "文件不能大于10M");
+        String originalFilename = multipartFile.getOriginalFilename();
+        final List<String> validSuffix = Arrays.asList("xlsx", "xls");
+        ThrowUtils.throwIf(!validSuffix.contains(FileUtil.getSuffix(originalFilename)), ErrorCode.PARAMS_ERROR, "文件格式不正确");
+        String suffix = FileUtil.getSuffix(originalFilename);
+
 
         User loginUser = userService.getLoginUser(httpServletRequest);
 

@@ -26,5 +26,10 @@ public class GenChartByAIRequest implements Serializable {
      */
     private String chartType;
 
+    /**
+     * AI模型
+     */
+    private String strategyAIName;
+
     private static final long serialVersionUID = 2347839513350379821L;
 }

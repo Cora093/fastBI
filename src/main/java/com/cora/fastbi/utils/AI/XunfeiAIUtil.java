@@ -12,6 +12,7 @@ import okhttp3.Response;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -27,10 +28,18 @@ public class XunfeiAIUtil extends WebSocketListener {
     // 地址与鉴权信息  https://spark-api.xf-yun.com/v2.1/chat   2.0地址  domain参数为generalv2
     // 星火大模型V3请求地址，对应的domain参数为generalv3
     public static final String hostUrl = "https://spark-api.xf-yun.com/v3.1/chat";
-    public static final String appid = "388d2e35";
-    public static final String apiSecret = "ZmUyZDM5YzM3MTIwNGU3NmFlZTlkZjhm";
-    public static final String apiKey = "b948796c297b51863b08e162588b6a15";
-    // todo key改到配置文件中
+
+    // TODO 静态变量无法获取
+
+    @Value("${mykeys.xunfei.apisecret}")
+    public static String appid;
+
+    @Value("${mykeys.xunfei.apisecret}")
+    public static String apiSecret;
+
+    @Value("${mykeys.xunfei.apikey}")
+    public static String apiKey;
+
 
     // public static List<RoleContent> historyList = new ArrayList<>(); // 对话历史存储集合
 
@@ -54,10 +63,9 @@ public class XunfeiAIUtil extends WebSocketListener {
     private OnWebSocketCompleteListener callback;
 
     // 构造函数
-    public XunfeiAIUtil(String newQuestion, String userId, Boolean wsCloseFlag, OnWebSocketCompleteListener callback) {
+    public XunfeiAIUtil(String newQuestion, Boolean wsCloseFlag, OnWebSocketCompleteListener callback) {
         totalAnswer = "";
         this.newQuestion = newQuestion;
-        this.userId = userId;
         this.wsCloseFlag = wsCloseFlag;
         this.callback = callback;
     }

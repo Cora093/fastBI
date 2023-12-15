@@ -3,7 +3,7 @@ package com.cora.fastbi.utils.AI;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.cora.fastbi.config.MyConfig;
+import com.cora.fastbi.config.KeyConfig;
 import com.cora.fastbi.exception.BusinessException;
 import com.google.gson.Gson;
 import lombok.Getter;
@@ -33,13 +33,13 @@ public class XunfeiAIUtil extends WebSocketListener {
     // TODO 静态变量无法获取
 
     @Value("${mykeys.xunfei.apisecret}")
-    public static String appid = MyConfig.getXunfeiAppid();
+    public static String appid = KeyConfig.getXunfeiAppid();
 
     @Value("${mykeys.xunfei.apisecret}")
-    public static String apiSecret = MyConfig.getXunfeiApiSecret();
+    public static String apiSecret = KeyConfig.getXunfeiApiSecret();
 
     @Value("${mykeys.xunfei.apikey}")
-    public static String apiKey = MyConfig.getXunfeiApiKey();
+    public static String apiKey = KeyConfig.getXunfeiApiKey();
 
 
     // public static List<RoleContent> historyList = new ArrayList<>(); // 对话历史存储集合

@@ -1,8 +1,10 @@
 package com.cora.fastbi.strategy;
 
 import com.cora.fastbi.common.ErrorCode;
+import com.cora.fastbi.config.KeyConfig;
 import com.cora.fastbi.exception.BusinessException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -14,9 +16,6 @@ import java.net.URL;
 
 public class OpenAIStrategy implements AIStrategy {
 
-    @Value("${mykeys.openai.key}")
-    String apikey;
-
     @Override
     public String AIQuestion(String question) {
         try {
@@ -24,7 +23,7 @@ public class OpenAIStrategy implements AIStrategy {
             String apiUrl = "https://api.openai.com/v1/chat/completions";
 
             // 设置请求头
-            String apiKey = apikey;
+            String apiKey = KeyConfig.getOpenAiApiKey();
             String contentType = "application/json";
             String authorization = "Bearer " + apiKey;
 

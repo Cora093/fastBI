@@ -15,6 +15,7 @@ import com.cora.fastbi.service.UserService;
 import com.cora.fastbi.strategy.AIStrategy;
 import com.cora.fastbi.strategy.OpenAIStrategy;
 import com.cora.fastbi.strategy.XunfeiStrategy;
+import com.cora.fastbi.strategy.YuCongMingStrategy;
 import com.cora.fastbi.utils.AI.AIUtils;
 import com.cora.fastbi.utils.ExcelUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -96,11 +97,11 @@ public class AIController {
         String totalResult = strategy.AIQuestion(newQuestion.toString());
 
         // 拆分字符串
-        String[] strings = totalResult.split("：");
+        String[] strings = totalResult.split("部分：");
 
         String generateChart = strings[1].substring(
                 strings[1].indexOf("option"), strings[1].lastIndexOf("};") + 2);
-        String generateResult = strings[2].trim();
+        String generateResult = strings[2].replaceFirst("\n", "");
 
         // 插入到数据库
         Chart chart = new Chart();
@@ -129,6 +130,8 @@ public class AIController {
             this.strategy = new XunfeiStrategy();
         } else if (strategyAIName.equals(AIConstant.OPENAI_API)) {
             this.strategy = new OpenAIStrategy();
+        } else if (strategyAIName.equals(AIConstant.YUCONGMING)) {
+            this.strategy = new YuCongMingStrategy();
         }
     }
 }

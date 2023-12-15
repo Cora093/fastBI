@@ -96,8 +96,10 @@ public class AIController {
         String totalResult = strategy.AIQuestion(newQuestion.toString());
 
         // 拆分字符串
-        String[] strings = totalResult.split("【【【");
-        String generateChart = strings[1].trim();
+        String[] strings = totalResult.split("：");
+
+        String generateChart = strings[1].substring(
+                strings[1].indexOf("option"), strings[1].lastIndexOf("};") + 2);
         String generateResult = strings[2].trim();
 
         // 插入到数据库

@@ -4,6 +4,8 @@ import com.azure.ai.openai.OpenAIClient;
 import com.azure.ai.openai.OpenAIClientBuilder;
 import com.azure.ai.openai.models.*;
 import com.azure.core.credential.KeyCredential;
+import com.azure.core.http.ProxyOptions;
+import com.azure.core.util.HttpClientOptions;
 import com.cora.fastbi.common.ErrorCode;
 import com.cora.fastbi.config.KeyConfig;
 import com.cora.fastbi.exception.BusinessException;
@@ -15,6 +17,7 @@ import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +26,15 @@ public class OpenAIStrategy implements AIStrategy {
 
     @Override
     public String AIQuestion(String question) {
+        // Proxy options
+        final String hostname = "localhost";
+        final int port = 8018;
+
+        ProxyOptions proxyOptions = new ProxyOptions(ProxyOptions.Type.HTTP, new InetSocketAddress(hostname, port));
+
         OpenAIClient client = new OpenAIClientBuilder()
                 .credential(new KeyCredential(KeyConfig.getOpenAiApiKey()))
+                .clientOptions(new HttpClientOptions().setProxyOptions(proxyOptions))
                 .buildClient();
 
         List<ChatRequestMessage> chatMessages = new ArrayList<>();

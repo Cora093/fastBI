@@ -145,7 +145,7 @@ public class XunfeiAIUtil extends WebSocketListener {
                 requestJson.put("header", header);
                 requestJson.put("parameter", parameter);
                 requestJson.put("payload", payload);
-                log.info(requestJson.toString()); // 可以打印看每次的传参明细
+                //log.info(requestJson.toString()); // 可以打印看每次的传参明细
                 webSocket.send(requestJson.toString());
                 // 等待服务端返回完毕后关闭
                 while (true) {
@@ -165,7 +165,7 @@ public class XunfeiAIUtil extends WebSocketListener {
     @Override
     public void onOpen(WebSocket webSocket, Response response) {
         super.onOpen(webSocket, response);
-        System.out.print("大模型：");
+//        System.out.print("大模型：");
         MyThread myThread = new MyThread(webSocket);
         myThread.start();
     }
@@ -181,13 +181,14 @@ public class XunfeiAIUtil extends WebSocketListener {
         }
         List<Text> textList = myJsonParse.payload.choices.text;
         for (Text temp : textList) {
-            System.out.print(temp.content);
+//            System.out.print(temp.content);
             totalAnswer = totalAnswer + temp.content;
         }
         if (myJsonParse.header.status == 2) {
             // 可以关闭连接，释放资源
-            System.out.println();
-            System.out.println("*************************************************************************************");
+            System.out.println("成功获取到结果");
+//            System.out.println();
+//            System.out.println("*************************************************************************************");
 //            if (canAddHistory()) {
 //                RoleContent roleContent = new RoleContent();
 //                roleContent.setRole("assistant");

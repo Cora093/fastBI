@@ -100,7 +100,7 @@ public class AIController {
         String[] strings = totalResult.split("部分：");
 
         String generateChart = strings[1].substring(
-                strings[1].indexOf("option"), strings[1].lastIndexOf("};") + 2);
+                strings[1].indexOf("\"option\"") + 9, strings[1].lastIndexOf("```") - 2);
         String generateResult = strings[2].replaceFirst("\n", "");
 
         // 插入到数据库

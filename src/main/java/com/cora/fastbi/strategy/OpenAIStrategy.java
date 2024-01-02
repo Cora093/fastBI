@@ -6,22 +6,15 @@ import com.azure.ai.openai.models.*;
 import com.azure.core.credential.KeyCredential;
 import com.azure.core.http.ProxyOptions;
 import com.azure.core.util.HttpClientOptions;
-import com.cora.fastbi.common.ErrorCode;
 import com.cora.fastbi.config.KeyConfig;
-import com.cora.fastbi.exception.BusinessException;
-import com.cora.fastbi.utils.AI.AIUtils;
-
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 
 import java.net.InetSocketAddress;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 具体策略1
+ */
 public class OpenAIStrategy implements AIStrategy {
 
     @Override

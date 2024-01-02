@@ -9,6 +9,9 @@ import okhttp3.WebSocket;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * 具体策略2
+ */
 public class XunfeiStrategy implements AIStrategy{
     @Override
     public String AIQuestion(String question) {

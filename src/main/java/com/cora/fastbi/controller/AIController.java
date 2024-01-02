@@ -99,9 +99,10 @@ public class AIController {
         // 拆分字符串
         String[] strings = totalResult.split("部分：");
 
-        String generateChart = strings[1].substring(
-                strings[1].indexOf("\"option\"") + 9, strings[1].lastIndexOf("```") - 2);
-        String generateResult = strings[2].replaceFirst("\n", "");
+        String generateChart = "";
+        generateChart = strings[1]
+                .substring(strings[1].indexOf("{"), strings[1].lastIndexOf("}") + 1);
+        String generateResult = strings[2].replaceFirst("\n", "").trim();
 
         // 插入到数据库
         Chart chart = new Chart();

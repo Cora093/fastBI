@@ -108,7 +108,7 @@ public class AIController {
         Chart chart = new Chart();
         chart.setName(name);
         chart.setGoal(goal);
-        chart.setOriginData(originData);
+        // chart.setOriginData(originData);
         chart.setChartType(chartType);
         chart.setGenerateChart(generateChart);
         chart.setGenerateResult(generateResult);
@@ -116,12 +116,50 @@ public class AIController {
         boolean saveResult = chartService.save(chart);
         ThrowUtils.throwIf(!saveResult, ErrorCode.DATABASE_ERROR, "图表保存失败");
 
+        // 单独建表保存原始数据
+        getCreateTableSQL(multipartFile, chart.getId());
+        getInsertDataSQL(multipartFile, chart.getId());
+        // chartService.saveOriginData(getOriginDataSQL(multipartFile));
+
         BiResponse biResponse = new BiResponse();
         biResponse.setId(chart.getId());
         biResponse.setGenerateChart(chart.getGenerateChart());
         biResponse.setGenerateResult(chart.getGenerateResult());
 
         return ResultUtils.success(biResponse);
+    }
+
+
+    // 获取原始数据的建表语句
+    private String getCreateTableSQL(MultipartFile multipartFile, Long chartId) {
+        List<String> headers = ExcelUtils.getExcelHeader(multipartFile);
+        StringBuilder sb = new StringBuilder();
+        sb.append("CREATE TABLE IF NOT EXISTS chart_").append(chartId).append(" (");
+        for (String header : headers) {
+            sb.append(" ").append(header).append(" varchar(100) null,");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+
+        sb.append(");");
+
+        return sb.toString();
+    }
+
+    // 获取数据的导入语句
+    private String getInsertDataSQL(MultipartFile multipartFile, Long chartId) {
+        List<List<String>> excelData = ExcelUtils.getExcelData(multipartFile);
+        StringBuilder sb = new StringBuilder();
+        sb.append("INSERT INTO chart_").append(chartId).append(" VALUES  ");
+        for (List<String> data : excelData) {
+            sb.append("(");
+            for (String cell : data) {
+                sb.append("'").append(cell).append("',");
+            }
+            sb.deleteCharAt(sb.length() - 1);
+            sb.append("),");
+        }
+        sb.deleteCharAt(sb.length() - 1).append(";");
+        return sb.toString();
     }
 
 

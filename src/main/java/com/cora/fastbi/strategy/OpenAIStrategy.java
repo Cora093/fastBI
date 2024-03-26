@@ -92,7 +92,7 @@ public class OpenAIStrategy implements AIStrategy {
 //            // 创建URL对象
 //            URL url = new URL(apiUrl);
 //
-//            // 创建代理对象 TODO 测试环境用
+//            // 创建代理对象 测试环境用
 //            //Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", 1080));
 //
 //            // 打开连接

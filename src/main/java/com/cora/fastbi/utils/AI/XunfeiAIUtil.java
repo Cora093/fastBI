@@ -30,8 +30,6 @@ public class XunfeiAIUtil extends WebSocketListener {
     // 星火大模型V3请求地址，对应的domain参数为generalv3
     public static final String hostUrl = "https://spark-api.xf-yun.com/v3.1/chat";
 
-    // TODO 静态变量无法获取
-
     @Value("${mykeys.xunfei.apisecret}")
     public static String appid = KeyConfig.getXunfeiAppid();
 
@@ -219,7 +217,6 @@ public class XunfeiAIUtil extends WebSocketListener {
                 }
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

@@ -116,7 +116,7 @@ public class AIController {
         boolean saveResult = chartService.save(chart);
         ThrowUtils.throwIf(!saveResult, ErrorCode.DATABASE_ERROR, "图表保存失败");
 
-        // 单独建表保存原始数据 todo
+        // 数据库表优化-单独建表保存原始数据 todo
         // getCreateTableSQL(multipartFile, chart.getId());
         // getInsertDataSQL(multipartFile, chart.getId());
         // chartService.saveOriginData(getOriginDataSQL(multipartFile));
@@ -130,7 +130,7 @@ public class AIController {
     }
 
 
-    // 获取原始数据的建表语句 todo
+    // 数据库表优化-获取原始数据的建表语句 todo
     private String getCreateTableSQL(MultipartFile multipartFile, Long chartId) {
         List<String> headers = ExcelUtils.getExcelHeader(multipartFile);
         StringBuilder sb = new StringBuilder();
@@ -145,22 +145,22 @@ public class AIController {
         return sb.toString();
     }
 
-    // 获取数据的导入语句 todo
-    private String getInsertDataSQL(MultipartFile multipartFile, Long chartId) {
-        List<List<String>> excelData = ExcelUtils.getExcelData(multipartFile);
-        StringBuilder sb = new StringBuilder();
-        sb.append("INSERT INTO chart_").append(chartId).append(" VALUES  ");
-        for (List<String> data : excelData) {
-            sb.append("(");
-            for (String cell : data) {
-                sb.append("'").append(cell).append("',");
-            }
-            sb.deleteCharAt(sb.length() - 1);
-            sb.append("),");
-        }
-        sb.deleteCharAt(sb.length() - 1).append(";");
-        return sb.toString();
-    }
+    // 数据库表优化-获取数据的导入语句 todo
+//    private String getInsertDataSQL(MultipartFile multipartFile, Long chartId) {
+//        List<List<String>> excelData = ExcelUtils.getExcelData(multipartFile);
+//        StringBuilder sb = new StringBuilder();
+//        sb.append("INSERT INTO chart_").append(chartId).append(" VALUES  ");
+//        for (List<String> data : excelData) {
+//            sb.append("(");
+//            for (String cell : data) {
+//                sb.append("'").append(cell).append("',");
+//            }
+//            sb.deleteCharAt(sb.length() - 1);
+//            sb.append("),");
+//        }
+//        sb.deleteCharAt(sb.length() - 1).append(";");
+//        return sb.toString();
+//    }
 
 
     // 修改策略

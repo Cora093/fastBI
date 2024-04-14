@@ -21,7 +21,9 @@ public class OpenAIStrategy implements AIStrategy {
     public String AIQuestion(String question) {
         // Proxy options
         final String hostname = "localhost";
-        final int port = 8018;
+        final int port = 10809; // 本地测试端口
+
+        // final int port = 8018; // 线上正式端口
 
         ProxyOptions proxyOptions = new ProxyOptions(ProxyOptions.Type.HTTP, new InetSocketAddress(hostname, port));
 
@@ -33,7 +35,7 @@ public class OpenAIStrategy implements AIStrategy {
         List<ChatRequestMessage> chatMessages = new ArrayList<>();
         chatMessages.add(new ChatRequestUserMessage(question));
 
-        ChatCompletions chatCompletions = client.getChatCompletions("gpt-3.5-turbo-1106",
+        ChatCompletions chatCompletions = client.getChatCompletions("gpt-3.5-turbo",
                 new ChatCompletionsOptions(chatMessages));
 
         for (ChatChoice choice : chatCompletions.getChoices()) {

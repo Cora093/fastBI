@@ -5,6 +5,7 @@ import com.cora.fastbi.common.BaseResponse;
 import com.cora.fastbi.common.ErrorCode;
 import com.cora.fastbi.common.ResultUtils;
 import com.cora.fastbi.constant.AIConstant;
+import com.cora.fastbi.exception.BusinessException;
 import com.cora.fastbi.exception.ThrowUtils;
 import com.cora.fastbi.model.dto.chart.GenChartByAIRequest;
 import com.cora.fastbi.model.entity.Chart;
@@ -18,6 +19,7 @@ import com.cora.fastbi.strategy.XunfeiStrategy;
 import com.cora.fastbi.strategy.YuCongMingStrategy;
 import com.cora.fastbi.utils.AI.AIUtils;
 import com.cora.fastbi.utils.ExcelUtils;
+import com.google.common.util.concurrent.RateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,6 +49,9 @@ public class AIController {
 
     private AIStrategy strategy;
 
+    RateLimiter rateLimiter = RateLimiter.create(0.1); // 限流
+
+
     /**
      * 智能分析
      *
@@ -58,6 +63,7 @@ public class AIController {
     @PostMapping("/gen")
     public BaseResponse<BiResponse> genChartByAI(@RequestPart("file") MultipartFile multipartFile,
                                                  GenChartByAIRequest genChartByAIRequest, HttpServletRequest httpServletRequest) {
+        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, "操作太频繁了");
         String name = genChartByAIRequest.getName();
         String goal = genChartByAIRequest.getGoal();
         String chartType = genChartByAIRequest.getChartType();

@@ -133,6 +133,13 @@
             <artifactId>azure-ai-openai</artifactId>
             <version>1.0.0-beta.6</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>32.1.2-jre</version>
+        </dependency>
     </dependencies>
 
     <build>

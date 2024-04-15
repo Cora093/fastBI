@@ -204,6 +204,29 @@ create table if not exists fastbi.chart
 
 
 
+#### 限流
+
+1. 限制用户调用的总量
+2. 限制用户短时间内的多次调用
+
+限制单个用户5秒使用一次接口
+
+限流的实现
+
+**Guava RateLimiter** 、**Bucket4j** 、**Redisson RateLimiter**
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

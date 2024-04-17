@@ -1,10 +1,13 @@
 package com.cora.fastbi.model.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
  * 图表信息表
@@ -16,13 +19,8 @@ public class Chart implements Serializable {
     /**
      * id
      */
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long id;
-
-    /**
-     * 图表名称
-     */
-    private String name;
 
     /**
      * 任务分析目标
@@ -50,6 +48,11 @@ public class Chart implements Serializable {
     private String generateResult;
 
     /**
+     * wait,running,succeed,failed
+     */
+    private String status;
+
+    /**
      * 创建者id
      */
     private Long userId;
@@ -67,8 +70,12 @@ public class Chart implements Serializable {
     /**
      * 是否删除
      */
-    @TableLogic
     private Integer isDelete;
+
+    /**
+     * 图表名称
+     */
+    private String name;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

@@ -7,6 +7,7 @@ import com.azure.core.credential.KeyCredential;
 import com.azure.core.http.ProxyOptions;
 import com.azure.core.util.HttpClientOptions;
 import com.cora.fastbi.config.KeyConfig;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.List;
 /**
  * 具体策略1
  */
+@Slf4j
 public class OpenAIStrategy implements AIStrategy {
 
     @Override
@@ -40,8 +42,9 @@ public class OpenAIStrategy implements AIStrategy {
 
         for (ChatChoice choice : chatCompletions.getChoices()) {
             ChatResponseMessage message = choice.getMessage();
-            System.out.println("Message:");
-            System.out.println(message.getContent());
+//            System.out.println("Message:");
+//            System.out.println(message.getContent());
+            log.info("openai成功获取到结果");
             return message.getContent();
         }
         return null;

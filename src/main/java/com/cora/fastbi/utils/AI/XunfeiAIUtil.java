@@ -43,7 +43,7 @@ public class XunfeiAIUtil extends WebSocketListener {
     // public static List<RoleContent> historyList = new ArrayList<>(); // 对话历史存储集合
 
     @Getter
-    public static String totalAnswer = ""; // 大模型的答案汇总
+    public static StringBuilder totalAnswer = new StringBuilder(); // 大模型的答案汇总
 
     // 环境治理的重要性  环保  人口老龄化  我爱我的祖国
     public String newQuestion = "";
@@ -63,7 +63,7 @@ public class XunfeiAIUtil extends WebSocketListener {
 
     // 构造函数
     public XunfeiAIUtil(String newQuestion, Boolean wsCloseFlag, OnWebSocketCompleteListener callback) {
-        totalAnswer = "";
+        totalAnswer = new StringBuilder();
         this.newQuestion = newQuestion;
         this.wsCloseFlag = wsCloseFlag;
         this.callback = callback;
@@ -73,7 +73,7 @@ public class XunfeiAIUtil extends WebSocketListener {
     @Override
     public void onClosed(WebSocket webSocket, int code, @NotNull String reason) {
         // 处理 WebSocket 连接关闭事件
-        callback.onComplete(getTotalAnswer());
+        callback.onComplete(String.valueOf(getTotalAnswer()));
     }
 
 
@@ -180,11 +180,11 @@ public class XunfeiAIUtil extends WebSocketListener {
         List<Text> textList = myJsonParse.payload.choices.text;
         for (Text temp : textList) {
 //            System.out.print(temp.content);
-            totalAnswer = totalAnswer + temp.content;
+            totalAnswer.append(temp.content);
         }
         if (myJsonParse.header.status == 2) {
             // 可以关闭连接，释放资源
-            System.out.println("成功获取到结果");
+            log.info("xunfei成功获取到结果");
 //            System.out.println();
 //            System.out.println("*************************************************************************************");
 //            if (canAddHistory()) {

@@ -37,6 +37,8 @@ create table if not exists fastbi.chart
     chart_type      varchar(128)                       null comment '图表类型',
     generate_chart  text                               null comment '生成的图表数据',
     generate_result text                               null comment '生成的分析结论',
+    status          varchar(64)                        not null comment 'wait,running,succeed,failed',
+
     user_id         bigint                             null comment '创建者id',
     create_time     datetime default CURRENT_TIMESTAMP not null comment '创建时间',
     update_time     datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',

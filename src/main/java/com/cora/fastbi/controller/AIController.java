@@ -4,8 +4,8 @@ import cn.hutool.core.io.FileUtil;
 import com.cora.fastbi.common.BaseResponse;
 import com.cora.fastbi.common.ErrorCode;
 import com.cora.fastbi.common.ResultUtils;
+import com.cora.fastbi.common.StatusType;
 import com.cora.fastbi.constant.AIConstant;
-import com.cora.fastbi.exception.BusinessException;
 import com.cora.fastbi.exception.ThrowUtils;
 import com.cora.fastbi.model.dto.chart.GenChartByAIRequest;
 import com.cora.fastbi.model.entity.Chart;
@@ -32,6 +32,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * AI接口
@@ -47,9 +49,15 @@ public class AIController {
     @Resource
     private ChartService chartService;
 
+    @Resource
+    private ThreadPoolExecutor threadPoolExecutor;
+
     private AIStrategy strategy;
 
-    RateLimiter rateLimiter = RateLimiter.create(0.1); // 限流
+//    public static final float QPS = 0.2f;
+    public static final float QPS = 0.2f;
+
+    RateLimiter rateLimiter = RateLimiter.create(QPS); // 限流
 
 
     /**
@@ -63,7 +71,7 @@ public class AIController {
     @PostMapping("/gen")
     public BaseResponse<BiResponse> genChartByAI(@RequestPart("file") MultipartFile multipartFile,
                                                  GenChartByAIRequest genChartByAIRequest, HttpServletRequest httpServletRequest) {
-        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, "操作太频繁了");
+        // 获取参数
         String name = genChartByAIRequest.getName();
         String goal = genChartByAIRequest.getGoal();
         String chartType = genChartByAIRequest.getChartType();
@@ -83,7 +91,10 @@ public class AIController {
         final List<String> validSuffix = Arrays.asList("xlsx", "xls");
         ThrowUtils.throwIf(!validSuffix.contains(FileUtil.getSuffix(originalFilename)), ErrorCode.PARAMS_ERROR, "文件格式不正确");
 
+        //获取当前用户
         User loginUser = userService.getLoginUser(httpServletRequest);
+        //限流
+        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, Math.ceil(1.0 / QPS) + "秒内只能提交一次操作");
 
         // 图表数据压缩
         String originData = ExcelUtils.convertExcelToCsv(multipartFile);
@@ -131,6 +142,112 @@ public class AIController {
         biResponse.setId(chart.getId());
         biResponse.setGenerateChart(chart.getGenerateChart());
         biResponse.setGenerateResult(chart.getGenerateResult());
+
+        return ResultUtils.success(biResponse);
+    }
+
+    /**
+     * 智能分析（异步）
+     *
+     * @param multipartFile
+     * @param genChartByAIRequest
+     * @param httpServletRequest
+     * @return
+     */
+    @PostMapping("/gen/async")
+    public BaseResponse<BiResponse> genChartByAIAsync(@RequestPart("file") MultipartFile multipartFile,
+                                                      GenChartByAIRequest genChartByAIRequest, HttpServletRequest httpServletRequest) {
+        // 获取参数
+        String name = genChartByAIRequest.getName();
+        String goal = genChartByAIRequest.getGoal();
+        String chartType = genChartByAIRequest.getChartType();
+        String AIName = genChartByAIRequest.getStrategyAIName();
+        // 校验参数
+        ThrowUtils.throwIf(StringUtils.isBlank(name), ErrorCode.PARAMS_ERROR, "图表名称不能为空");
+        ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "图表名称过长");
+        ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "分析目标不能为空");
+        ThrowUtils.throwIf(StringUtils.isBlank(AIName), ErrorCode.PARAMS_ERROR, "模型名称不能为空");
+        final List<String> validAIName = Arrays.asList(AIConstant.XUNFEI, AIConstant.OPENAI_API, AIConstant.YUCONGMING);
+        ThrowUtils.throwIf(!validAIName.contains(AIName), ErrorCode.PARAMS_ERROR, "模型名称非法");
+        // 校验文件格式 大小
+        ThrowUtils.throwIf(multipartFile == null || multipartFile.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
+        long size = multipartFile.getSize();
+        ThrowUtils.throwIf(size > 1024 * 1024 * 10, ErrorCode.PARAMS_ERROR, "文件不能大于10M");
+        String originalFilename = multipartFile.getOriginalFilename();
+        final List<String> validSuffix = Arrays.asList("xlsx", "xls");
+        ThrowUtils.throwIf(!validSuffix.contains(FileUtil.getSuffix(originalFilename)), ErrorCode.PARAMS_ERROR, "文件格式不正确");
+
+        //获取当前用户
+        User loginUser = userService.getLoginUser(httpServletRequest);
+        //限流
+        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, Math.ceil(1.0 / QPS) + "秒内只能提交一次操作");
+
+        // 图表数据压缩
+        String originData = ExcelUtils.convertExcelToCsv(multipartFile);
+
+        // 拼接提问字符串
+        StringBuilder newQuestion = new StringBuilder(AIUtils.getPrompt());
+        newQuestion.append("分析需求：\n").append(goal);
+        if (StringUtils.isNotBlank(chartType)) {
+            newQuestion.append("，请使用图表类型：").append(chartType).append("\n");
+        }
+        newQuestion.append("原始数据：\n").append(originData);
+
+        // 先将任务存入数据库
+        Chart chart = new Chart();
+        chart.setName(name);
+        chart.setGoal(goal);
+        chart.setOriginData(originData);
+        chart.setChartType(chartType);
+        chart.setUserId(loginUser.getId());
+        chart.setStatus(StatusType.WAIT.getStatus());
+        boolean saveResult = chartService.save(chart);
+        ThrowUtils.throwIf(!saveResult, ErrorCode.DATABASE_ERROR, "图表保存失败");
+
+        // 提交任务到线程池
+        CompletableFuture.runAsync(() -> {
+            log.info(Thread.currentThread().getName() + "开始分析");
+            // 设置任务状态为running
+            Chart updateChart = new Chart();
+            updateChart.setId(chart.getId());
+            updateChart.setStatus(StatusType.RUNNING.getStatus());
+            boolean addResult = chartService.updateById(updateChart);
+            ThrowUtils.throwIf(!addResult, ErrorCode.DATABASE_ERROR, "图表保存失败");
+
+            // 设置提问策略
+            setStrategy(AIName);
+
+            // 提问
+            String totalResult = strategy.AIQuestion(newQuestion.toString());
+
+            // 拆分字符串
+            String[] strings = totalResult.split("部分：");
+
+            String generateChart = "";
+            generateChart = strings[1]
+                    .substring(strings[1].indexOf("{"), strings[1].lastIndexOf("}") + 1);
+            String generateResult = strings[2].replaceFirst("\n", "").trim();
+
+            // 更新结果到数据库
+            Chart resChart = new Chart();
+            resChart.setId(chart.getId());
+            resChart.setGenerateChart(generateChart);
+            resChart.setGenerateResult(generateResult);
+            resChart.setStatus(StatusType.SUCCEED.getStatus());
+            boolean updateResult = chartService.updateById(resChart);
+            ThrowUtils.throwIf(!updateResult, ErrorCode.DATABASE_ERROR, "图表保存失败");
+
+            log.info(Thread.currentThread().getName() + "结束分析");
+
+        }, threadPoolExecutor);
+
+        // 数据库表优化-单独建表保存原始数据 todo
+        // getCreateTableSQL(multipartFile, chart.getId());
+        // getInsertDataSQL(multipartFile, chart.getId());
+        // chartService.saveOriginData(getOriginDataSQL(multipartFile));
+
+        BiResponse biResponse = new BiResponse();
+        biResponse.setId(chart.getId());
 
         return ResultUtils.success(biResponse);
     }

@@ -29,6 +29,12 @@ public class KeyConfig {
     @Getter
     private static String yucongmingSecretKey;
 
+    @Getter
+    private static String baiduModelID;
+
+    @Getter
+    private static String baiduSecretkey;
+
     @Autowired
     public KeyConfig(Environment environment) {
         xunfeiAppid = environment.getProperty("mykeys.xunfei.appid");
@@ -37,6 +43,8 @@ public class KeyConfig {
         openAiApiKey = environment.getProperty("mykeys.openai.key");
         yucongmingAccessKey = environment.getProperty("mykeys.yucongming.accesskey");
         yucongmingSecretKey = environment.getProperty("mykeys.yucongming.secretkey");
+        baiduModelID = environment.getProperty("mykeys.baiduapp.modelid");
+        baiduSecretkey = environment.getProperty("mykeys.baiduapp.secretkey");
     }
 
 }

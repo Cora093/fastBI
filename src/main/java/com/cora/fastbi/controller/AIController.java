@@ -6,6 +6,7 @@ import com.cora.fastbi.common.ErrorCode;
 import com.cora.fastbi.common.ResultUtils;
 import com.cora.fastbi.common.StatusType;
 import com.cora.fastbi.constant.AIConstant;
+import com.cora.fastbi.exception.BusinessException;
 import com.cora.fastbi.exception.ThrowUtils;
 import com.cora.fastbi.model.dto.chart.GenChartByAIRequest;
 import com.cora.fastbi.model.entity.Chart;
@@ -14,9 +15,9 @@ import com.cora.fastbi.model.vo.BiResponse;
 import com.cora.fastbi.service.ChartService;
 import com.cora.fastbi.service.UserService;
 import com.cora.fastbi.strategy.AIStrategy;
+import com.cora.fastbi.strategy.BaiduAppStrategy;
 import com.cora.fastbi.strategy.OpenAIStrategy;
 import com.cora.fastbi.strategy.XunfeiStrategy;
-import com.cora.fastbi.strategy.YuCongMingStrategy;
 import com.cora.fastbi.utils.AI.AIUtils;
 import com.cora.fastbi.utils.ExcelUtils;
 import com.google.common.util.concurrent.RateLimiter;
@@ -54,7 +55,9 @@ public class AIController {
 
     private AIStrategy strategy;
 
-//    public static final float QPS = 0.2f;
+    private static final List<String> validAIName = Arrays.asList(AIConstant.XUNFEI, AIConstant.OPENAI_API, AIConstant.BAIDU_APP);
+
+//    public static final float QPS = 2f;
     public static final float QPS = 0.2f;
 
     RateLimiter rateLimiter = RateLimiter.create(QPS); // 限流
@@ -81,7 +84,6 @@ public class AIController {
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "图表名称过长");
         ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "分析目标不能为空");
         ThrowUtils.throwIf(StringUtils.isBlank(AIName), ErrorCode.PARAMS_ERROR, "模型名称不能为空");
-        final List<String> validAIName = Arrays.asList(AIConstant.XUNFEI, AIConstant.OPENAI_API, AIConstant.YUCONGMING);
         ThrowUtils.throwIf(!validAIName.contains(AIName), ErrorCode.PARAMS_ERROR, "模型名称非法");
         // 校验文件格式 大小
         ThrowUtils.throwIf(multipartFile == null || multipartFile.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
@@ -167,7 +169,6 @@ public class AIController {
         ThrowUtils.throwIf(StringUtils.isNotBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "图表名称过长");
         ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "分析目标不能为空");
         ThrowUtils.throwIf(StringUtils.isBlank(AIName), ErrorCode.PARAMS_ERROR, "模型名称不能为空");
-        final List<String> validAIName = Arrays.asList(AIConstant.XUNFEI, AIConstant.OPENAI_API, AIConstant.YUCONGMING);
         ThrowUtils.throwIf(!validAIName.contains(AIName), ErrorCode.PARAMS_ERROR, "模型名称非法");
         // 校验文件格式 大小
         ThrowUtils.throwIf(multipartFile == null || multipartFile.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
@@ -219,14 +220,20 @@ public class AIController {
 
             // 提问
             String totalResult = strategy.AIQuestion(newQuestion.toString());
+            String generateChart = null;
+            String generateResult = null;
 
-            // 拆分字符串
-            String[] strings = totalResult.split("部分：");
+            try {
+                // 拆分字符串
+                String[] strings = totalResult.split("部分：");
 
-            String generateChart = "";
-            generateChart = strings[1]
-                    .substring(strings[1].indexOf("{"), strings[1].lastIndexOf("}") + 1);
-            String generateResult = strings[2].replaceFirst("\n", "").trim();
+                generateChart = "";
+                generateChart = strings[1]
+                        .substring(strings[1].indexOf("{"), strings[1].lastIndexOf("}") + 1);
+                generateResult = strings[2].replaceFirst("\n", "").trim();
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "结果解析失败");
+            }
 
             // 更新结果到数据库
             Chart resChart = new Chart();
@@ -254,19 +261,19 @@ public class AIController {
 
 
     // 数据库表优化-获取原始数据的建表语句 todo
-    private String getCreateTableSQL(MultipartFile multipartFile, Long chartId) {
-        List<String> headers = ExcelUtils.getExcelHeader(multipartFile);
-        StringBuilder sb = new StringBuilder();
-        sb.append("CREATE TABLE IF NOT EXISTS chart_").append(chartId).append(" (");
-        for (String header : headers) {
-            sb.append(" ").append(header).append(" varchar(100) null,");
-        }
-        sb.deleteCharAt(sb.length() - 1);
-
-        sb.append(");");
-
-        return sb.toString();
-    }
+//    private String getCreateTableSQL(MultipartFile multipartFile, Long chartId) {
+//        List<String> headers = ExcelUtils.getExcelHeader(multipartFile);
+//        StringBuilder sb = new StringBuilder();
+//        sb.append("CREATE TABLE IF NOT EXISTS chart_").append(chartId).append(" (");
+//        for (String header : headers) {
+//            sb.append(" ").append(header).append(" varchar(100) null,");
+//        }
+//        sb.deleteCharAt(sb.length() - 1);
+//
+//        sb.append(");");
+//
+//        return sb.toString();
+//    }
 
     // 数据库表优化-获取数据的导入语句 todo
 //    private String getInsertDataSQL(MultipartFile multipartFile, Long chartId) {
@@ -292,8 +299,8 @@ public class AIController {
             this.strategy = new XunfeiStrategy();
         } else if (strategyAIName.equals(AIConstant.OPENAI_API)) {
             this.strategy = new OpenAIStrategy();
-        } else if (strategyAIName.equals(AIConstant.YUCONGMING)) {
-            this.strategy = new YuCongMingStrategy();
+        } else if (strategyAIName.equals(AIConstant.BAIDU_APP)) {
+            this.strategy = new BaiduAppStrategy();
         }
     }
 }

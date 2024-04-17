@@ -25,7 +25,7 @@ public class ThreadPoolExecutorConfig {
     @Bean
     public ThreadPoolExecutor threadPoolExecutor() {
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(2,4,2, TimeUnit.MINUTES,
-                        new ArrayBlockingQueue<>(8), threadFactory);
+                        new ArrayBlockingQueue<>(10), threadFactory);
 
         return threadPoolExecutor;
     }

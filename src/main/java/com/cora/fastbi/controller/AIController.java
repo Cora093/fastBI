@@ -132,6 +132,7 @@ public class AIController {
         chart.setGenerateChart(generateChart);
         chart.setGenerateResult(generateResult);
         chart.setUserId(loginUser.getId());
+        chart.setStatus(StatusType.SUCCEED.getStatus());
         boolean saveResult = chartService.save(chart);
         ThrowUtils.throwIf(!saveResult, ErrorCode.DATABASE_ERROR, "图表保存失败");
 

@@ -7,6 +7,7 @@ import com.azure.core.credential.KeyCredential;
 import com.azure.core.http.ProxyOptions;
 import com.azure.core.util.HttpClientOptions;
 import com.cora.fastbi.config.KeyConfig;
+import com.cora.fastbi.constant.AIConstant;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
@@ -21,6 +22,9 @@ public class OpenAIStrategy implements AIStrategy {
 
     @Override
     public String AIQuestion(String question) {
+        String AIName = AIConstant.OPENAI_API;
+        log.info(AIName + "开始请求");
+
         // Proxy options
         final String hostname = "localhost";
         final int port = 10809; // 本地测试端口
@@ -44,7 +48,7 @@ public class OpenAIStrategy implements AIStrategy {
             ChatResponseMessage message = choice.getMessage();
 //            System.out.println("Message:");
 //            System.out.println(message.getContent());
-            log.info("openai成功获取到结果");
+            log.info(AIName + "成功获取到结果");
             return message.getContent();
         }
         return null;

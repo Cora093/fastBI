@@ -184,7 +184,6 @@ public class XunfeiAIUtil extends WebSocketListener {
         }
         if (myJsonParse.header.status == 2) {
             // 可以关闭连接，释放资源
-            log.info("xunfei成功获取到结果");
 //            System.out.println();
 //            System.out.println("*************************************************************************************");
 //            if (canAddHistory()) {

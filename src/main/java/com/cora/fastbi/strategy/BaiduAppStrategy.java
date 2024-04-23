@@ -4,6 +4,7 @@ import com.baidubce.appbuilder.console.agentbuilder.AgentBuilder;
 import com.baidubce.appbuilder.model.agentbuilder.AgentBuilderIterator;
 import com.cora.fastbi.common.ErrorCode;
 import com.cora.fastbi.config.KeyConfig;
+import com.cora.fastbi.constant.AIConstant;
 import com.cora.fastbi.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -11,6 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 public class BaiduAppStrategy implements AIStrategy {
     @Override
     public String AIQuestion(String question) {
+        String AIName = AIConstant.BAIDU_APP;
+        log.info(AIName + "开始请求");
+
         System.setProperty("APPBUILDER_TOKEN", KeyConfig.getBaiduSecretkey());
 
         String appId = KeyConfig.getBaiduModelID();
@@ -25,11 +29,10 @@ public class BaiduAppStrategy implements AIStrategy {
             throw new BusinessException(ErrorCode.AI_INTERFACE_ERROR);
         }
 
-        log.info("baiduapp成功获取到结果");
+        log.info(AIName + "成功获取到结果");
         String res = itor.next().getAnswer();
 //        log.info(res);
         return res;
-
 
 
 //        while (itor.hasNext()) {

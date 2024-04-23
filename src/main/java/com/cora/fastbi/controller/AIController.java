@@ -58,7 +58,7 @@ public class AIController {
     private static final List<String> validAIName = Arrays.asList(AIConstant.XUNFEI, AIConstant.OPENAI_API, AIConstant.BAIDU_APP);
 
 //    public static final float QPS = 2f;
-    public static final float QPS = 0.2f;
+    public static final float QPS = 0.1f;
 
     RateLimiter rateLimiter = RateLimiter.create(QPS); // 限流
 

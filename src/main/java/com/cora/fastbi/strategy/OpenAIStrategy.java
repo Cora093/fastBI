@@ -27,9 +27,9 @@ public class OpenAIStrategy implements AIStrategy {
 
         // Proxy options
         final String hostname = "localhost";
-        final int port = 10809; // 本地测试端口
+        //final int port = 10809; // 本地测试端口
 
-        // final int port = 8018; // 线上正式端口
+        final int port = 8018; //todo 线上正式端口
 
         ProxyOptions proxyOptions = new ProxyOptions(ProxyOptions.Type.HTTP, new InetSocketAddress(hostname, port));
 

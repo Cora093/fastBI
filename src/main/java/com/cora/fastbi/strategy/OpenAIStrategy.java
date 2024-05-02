@@ -20,18 +20,18 @@ import java.util.List;
 @Slf4j
 public class OpenAIStrategy implements AIStrategy {
 
+    private final String host = KeyConfig.getProxyHost();
+
+    private final int port = Integer.parseInt(KeyConfig.getProxyPort());
+
+
     @Override
     public String AIQuestion(String question) {
         String AIName = AIConstant.OPENAI_API;
         log.info(AIName + "开始请求");
 
-        // Proxy options
-        final String hostname = "localhost";
-        //final int port = 10809; // 本地测试端口
-
-        final int port = 8018; //todo 线上正式端口
-
-        ProxyOptions proxyOptions = new ProxyOptions(ProxyOptions.Type.HTTP, new InetSocketAddress(hostname, port));
+        ProxyOptions proxyOptions = new ProxyOptions
+                (ProxyOptions.Type.HTTP, new InetSocketAddress(host, port));
 
         OpenAIClient client = new OpenAIClientBuilder()
                 .credential(new KeyCredential(KeyConfig.getOpenAiApiKey()))

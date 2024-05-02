@@ -35,6 +35,13 @@ public class KeyConfig {
     @Getter
     private static String baiduSecretkey;
 
+    @Getter
+    private static String proxyHost;
+
+    @Getter
+    private static String proxyPort;
+
+
     @Autowired
     public KeyConfig(Environment environment) {
         xunfeiAppid = environment.getProperty("mykeys.xunfei.appid");
@@ -45,6 +52,8 @@ public class KeyConfig {
         yucongmingSecretKey = environment.getProperty("mykeys.yucongming.secretkey");
         baiduModelID = environment.getProperty("mykeys.baiduapp.modelid");
         baiduSecretkey = environment.getProperty("mykeys.baiduapp.secretkey");
+        proxyHost = environment.getProperty("proxy.host");
+        proxyPort = environment.getProperty("proxy.port");
     }
 
 }

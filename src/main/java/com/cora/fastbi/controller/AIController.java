@@ -14,10 +14,7 @@ import com.cora.fastbi.model.entity.User;
 import com.cora.fastbi.model.vo.BiResponse;
 import com.cora.fastbi.service.ChartService;
 import com.cora.fastbi.service.UserService;
-import com.cora.fastbi.strategy.AIStrategy;
-import com.cora.fastbi.strategy.BaiduAppStrategy;
-import com.cora.fastbi.strategy.OpenAIStrategy;
-import com.cora.fastbi.strategy.XunfeiStrategy;
+import com.cora.fastbi.strategy.*;
 import com.cora.fastbi.utils.AI.AIUtils;
 import com.cora.fastbi.utils.ExcelUtils;
 import com.google.common.util.concurrent.RateLimiter;
@@ -55,7 +52,7 @@ public class AIController {
 
     private AIStrategy strategy;
 
-    private static final List<String> validAIName = Arrays.asList(AIConstant.XUNFEI, AIConstant.OPENAI_API, AIConstant.BAIDU_APP);
+    private static final List<String> validAIName = Arrays.asList(AIConstant.XUNFEI, AIConstant.ZHIPU, AIConstant.BAIDU_APP);
 
 //    public static final float QPS = 2f;
     public static final float QPS = 0.1f;
@@ -296,12 +293,16 @@ public class AIController {
 
     // 修改策略
     public void setStrategy(String strategyAIName) {
-        if (strategyAIName.equals(AIConstant.XUNFEI)) {
-            this.strategy = new XunfeiStrategy();
-        } else if (strategyAIName.equals(AIConstant.OPENAI_API)) {
-            this.strategy = new OpenAIStrategy();
-        } else if (strategyAIName.equals(AIConstant.BAIDU_APP)) {
-            this.strategy = new BaiduAppStrategy();
+        switch (strategyAIName) {
+            case AIConstant.XUNFEI:
+                this.strategy = new XunfeiStrategy();
+                break;
+            case AIConstant.ZHIPU:
+                this.strategy = new ZhipuStrategy();
+                break;
+            case AIConstant.BAIDU_APP:
+                this.strategy = new BaiduAppStrategy();
+                break;
         }
     }
 }

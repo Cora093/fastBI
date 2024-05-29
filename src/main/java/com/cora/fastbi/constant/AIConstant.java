@@ -26,4 +26,8 @@ public interface AIConstant {
      */
     String BAIDU_APP = "baidu";
 
+    /**
+     * zhipu ai
+     */
+    String ZHIPU = "zhipu";
 }

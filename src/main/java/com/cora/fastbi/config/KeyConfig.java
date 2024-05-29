@@ -36,6 +36,9 @@ public class KeyConfig {
     private static String baiduSecretkey;
 
     @Getter
+    private static String zhipuApiKey;
+
+    @Getter
     private static String proxyHost;
 
     @Getter
@@ -47,11 +50,12 @@ public class KeyConfig {
         xunfeiAppid = environment.getProperty("mykeys.xunfei.appid");
         xunfeiApiSecret = environment.getProperty("mykeys.xunfei.apisecret");
         xunfeiApiKey = environment.getProperty("mykeys.xunfei.apikey");
-        openAiApiKey = environment.getProperty("mykeys.openai.key");
-        yucongmingAccessKey = environment.getProperty("mykeys.yucongming.accesskey");
-        yucongmingSecretKey = environment.getProperty("mykeys.yucongming.secretkey");
+//        openAiApiKey = environment.getProperty("mykeys.openai.key");
+//        yucongmingAccessKey = environment.getProperty("mykeys.yucongming.accesskey");
+//        yucongmingSecretKey = environment.getProperty("mykeys.yucongming.secretkey");
         baiduModelID = environment.getProperty("mykeys.baiduapp.modelid");
         baiduSecretkey = environment.getProperty("mykeys.baiduapp.secretkey");
+        zhipuApiKey = environment.getProperty("mykeys.zhipu.apikey");
         proxyHost = environment.getProperty("proxy.host");
         proxyPort = environment.getProperty("proxy.port");
     }

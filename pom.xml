@@ -140,12 +140,19 @@
             <artifactId>guava</artifactId>
             <version>32.1.2-jre</version>
         </dependency>
-<!--         百度 appbuilder-->
+        <!-- 百度 appbuilder -->
         <dependency>
             <groupId>com.baidubce</groupId>
             <artifactId>appbuilder</artifactId>
             <version>0.6.0</version>
         </dependency>
+        <!-- zhipu sdk  -->
+        <dependency>
+            <groupId>cn.bigmodel.openapi</groupId>
+            <artifactId>oapi-java-sdk</artifactId>
+            <version>release-V4-2.0.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>

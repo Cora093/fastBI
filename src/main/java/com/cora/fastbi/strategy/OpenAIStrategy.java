@@ -18,6 +18,7 @@ import java.util.List;
  * 具体策略1
  */
 @Slf4j
+@Deprecated
 public class OpenAIStrategy implements AIStrategy {
 
     private final String host = KeyConfig.getProxyHost();

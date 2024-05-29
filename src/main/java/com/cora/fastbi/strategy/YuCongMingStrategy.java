@@ -12,6 +12,7 @@ import com.yupi.yucongming.dev.model.DevChatResponse;
 /**
  * 具体策略3
  */
+@Deprecated
 public class YuCongMingStrategy implements AIStrategy{
 
     @Override

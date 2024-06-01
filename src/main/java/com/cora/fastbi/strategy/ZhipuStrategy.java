@@ -22,17 +22,19 @@ import java.util.List;
 @Slf4j
 public class ZhipuStrategy implements AIStrategy {
     @Override
-    public String AIQuestion(String question) {
+    public String AIQuestion(String prompt, String question) {
         String AIName = AIConstant.ZHIPU;
-        String AIModel = Constants.ModelChatGLM3TURBO;
+        String AIModel = Constants.ModelChatGLM4;
         log.info(AIName + "开始请求, 模型为:" + AIModel);
 
         String totalResult = "";
         // 调用AI接口
         ClientV4 client = new ClientV4.Builder(KeyConfig.getZhipuApiKey()).build();
         List<ChatMessage> messages = new ArrayList<>();
-        ChatMessage chatMessage = new ChatMessage(ChatMessageRole.USER.value(), question);
-        messages.add(chatMessage);
+        ChatMessage sysMessage = new ChatMessage(ChatMessageRole.SYSTEM.value(), prompt);
+        ChatMessage userMessage = new ChatMessage(ChatMessageRole.USER.value(), question);
+        messages.add(sysMessage);
+        messages.add(userMessage);
         String requestId = String.format("request_%s", System.currentTimeMillis());
 
         ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()

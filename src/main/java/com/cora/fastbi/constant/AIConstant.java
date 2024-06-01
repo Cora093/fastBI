@@ -16,18 +16,25 @@ public interface AIConstant {
      */
     String OPENAI_API = "openai";
 
-//    /**
-//     * 鱼聪明
-//     */
-//    String YUCONGMING = "yucongming";
+    /**
+     * 鱼聪明
+     */
+    @Deprecated
+    String YUCONGMING = "yucongming";
 
     /**
      * baidu appbuilder
      */
+    @Deprecated
     String BAIDU_APP = "baidu";
 
     /**
      * zhipu ai
      */
     String ZHIPU = "zhipu";
+
+    /**
+     * qwen ai
+     */
+    String QWEN = "qwen";
 }

@@ -52,10 +52,12 @@ public class AIController {
 
     private AIStrategy strategy;
 
-    private static final List<String> validAIName = Arrays.asList(AIConstant.XUNFEI, AIConstant.ZHIPU, AIConstant.BAIDU_APP);
+    private static final List<String> validAIName = Arrays.asList(AIConstant.XUNFEI, AIConstant.ZHIPU, AIConstant.QWEN);
+
+    private static final List<String> validSuffix = Arrays.asList("xlsx", "xls");
 
 //    public static final float QPS = 2f;
-    public static final float QPS = 0.1f;
+    public static final float QPS = 0.3f;
 
     RateLimiter rateLimiter = RateLimiter.create(QPS); // 限流
 
@@ -87,38 +89,46 @@ public class AIController {
         long size = multipartFile.getSize();
         ThrowUtils.throwIf(size > 1024 * 1024 * 10, ErrorCode.PARAMS_ERROR, "文件不能大于10M");
         String originalFilename = multipartFile.getOriginalFilename();
-        final List<String> validSuffix = Arrays.asList("xlsx", "xls");
         ThrowUtils.throwIf(!validSuffix.contains(FileUtil.getSuffix(originalFilename)), ErrorCode.PARAMS_ERROR, "文件格式不正确");
 
         //获取当前用户
         User loginUser = userService.getLoginUser(httpServletRequest);
         //限流
-        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, Math.ceil(1.0 / QPS) + "秒内只能提交一次操作");
+        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, (int)Math.ceil(1.0 / QPS) + "秒内只能提交一次操作");
 
         // 图表数据压缩
         String originData = ExcelUtils.convertExcelToCsv(multipartFile);
 
         // 拼接提问字符串
-        StringBuilder newQuestion = new StringBuilder(AIUtils.getPrompt());
-        newQuestion.append("分析需求：\n").append(goal);
+        StringBuilder question = new StringBuilder();
+        question.append("分析需求：\n").append(goal);
         if (StringUtils.isNotBlank(chartType)) {
-            newQuestion.append("，请使用图表类型：").append(chartType).append("\n");
+            question.append("，请使用图表类型：").append(chartType).append("\n");
         }
-        newQuestion.append("原始数据：\n").append(originData);
+        question.append("原始数据：\n").append(originData);
 
         // 设置提问策略
         setStrategy(AIName);
 
         // 提问
-        String totalResult = strategy.AIQuestion(newQuestion.toString());
+        String totalResult = "";
+        try {
+            totalResult = strategy.AIQuestion(AIUtils.getPrompt(), question.toString());
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.AI_INTERFACE_ERROR);
+        }
 
-        // 拆分字符串
-        String[] strings = totalResult.split("部分：");
-
-        String generateChart = "";
-        generateChart = strings[1]
-                .substring(strings[1].indexOf("{"), strings[1].lastIndexOf("}") + 1);
-        String generateResult = strings[2].replaceFirst("\n", "").trim();
+        String generateChart = null;
+        String generateResult = null;
+        try {
+            // 拆分字符串
+            String[] strings = totalResult.split("部分：");
+            generateChart = strings[1]
+                    .substring(strings[1].indexOf("{"), strings[1].lastIndexOf("}") + 1);
+            generateResult = strings[2].replaceFirst("\n", "").trim();
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "结果解析失败");
+        }
 
         // 插入到数据库
         Chart chart = new Chart();
@@ -173,24 +183,23 @@ public class AIController {
         long size = multipartFile.getSize();
         ThrowUtils.throwIf(size > 1024 * 1024 * 10, ErrorCode.PARAMS_ERROR, "文件不能大于10M");
         String originalFilename = multipartFile.getOriginalFilename();
-        final List<String> validSuffix = Arrays.asList("xlsx", "xls");
         ThrowUtils.throwIf(!validSuffix.contains(FileUtil.getSuffix(originalFilename)), ErrorCode.PARAMS_ERROR, "文件格式不正确");
 
         //获取当前用户
         User loginUser = userService.getLoginUser(httpServletRequest);
         //限流
-        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, Math.ceil(1.0 / QPS) + "秒内只能提交一次操作");
+        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, (int)Math.ceil(1.0 / QPS) + "秒内只能提交一次操作");
 
         // 图表数据压缩
         String originData = ExcelUtils.convertExcelToCsv(multipartFile);
 
         // 拼接提问字符串
-        StringBuilder newQuestion = new StringBuilder(AIUtils.getPrompt());
-        newQuestion.append("分析需求：\n").append(goal);
+        StringBuilder question = new StringBuilder();
+        question.append("分析需求：\n").append(goal);
         if (StringUtils.isNotBlank(chartType)) {
-            newQuestion.append("，请使用图表类型：").append(chartType).append("\n");
+            question.append("，请使用图表类型：").append(chartType).append("\n");
         }
-        newQuestion.append("原始数据：\n").append(originData);
+        question.append("原始数据：\n").append(originData);
 
         // 先将任务存入数据库
         Chart chart = new Chart();
@@ -217,15 +226,18 @@ public class AIController {
             setStrategy(AIName);
 
             // 提问
-            String totalResult = strategy.AIQuestion(newQuestion.toString());
+            String totalResult = "";
+            try {
+                totalResult = strategy.AIQuestion(AIUtils.getPrompt(), question.toString());
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.AI_INTERFACE_ERROR);
+            }
+
             String generateChart = null;
             String generateResult = null;
-
             try {
                 // 拆分字符串
                 String[] strings = totalResult.split("部分：");
-
-                generateChart = "";
                 generateChart = strings[1]
                         .substring(strings[1].indexOf("{"), strings[1].lastIndexOf("}") + 1);
                 generateResult = strings[2].replaceFirst("\n", "").trim();
@@ -300,8 +312,8 @@ public class AIController {
             case AIConstant.ZHIPU:
                 this.strategy = new ZhipuStrategy();
                 break;
-            case AIConstant.BAIDU_APP:
-                this.strategy = new BaiduAppStrategy();
+            case AIConstant.QWEN:
+                this.strategy = new QwenStrategy();
                 break;
         }
     }

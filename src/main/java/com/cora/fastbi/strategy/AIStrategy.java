@@ -5,6 +5,6 @@ package com.cora.fastbi.strategy;
  */
 public interface AIStrategy {
 
-    public abstract String AIQuestion(String question);
+    public abstract String AIQuestion(String prompt, String question) throws Exception;
 
 }

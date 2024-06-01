@@ -17,10 +17,11 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class XunfeiStrategy implements AIStrategy{
     @Override
-    public String AIQuestion(String question) {
+    public String AIQuestion(String prompt, String question) {
         String AIName = AIConstant.XUNFEI;
         log.info(AIName + "开始请求");
 
+        String totalQuestion = prompt + question;
         String totalResult = "";
         // 封装请求调用AI接口
         try {

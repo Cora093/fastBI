@@ -20,6 +20,10 @@ import com.cora.fastbi.utils.ExcelUtils;
 import com.google.common.util.concurrent.RateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RRateLimiter;
+import org.redisson.api.RateIntervalUnit;
+import org.redisson.api.RateType;
+import org.redisson.api.RedissonClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -50,17 +54,17 @@ public class AIController {
     @Resource
     private ThreadPoolExecutor threadPoolExecutor;
 
+    @Resource
+    private RedissonClient redissonClient;
+
     private AIStrategy strategy;
 
     private static final List<String> validAIName = Arrays.asList(AIConstant.XUNFEI, AIConstant.ZHIPU, AIConstant.QWEN);
 
     private static final List<String> validSuffix = Arrays.asList("xlsx", "xls");
 
-//    public static final float QPS = 2f;
-    public static final float QPS = 0.3f;
-
-    RateLimiter rateLimiter = RateLimiter.create(QPS); // 限流
-
+    // 多少秒允许一个请求
+    private static final int TIME_PER_REQ = 5;
 
     /**
      * 智能分析
@@ -94,7 +98,9 @@ public class AIController {
         //获取当前用户
         User loginUser = userService.getLoginUser(httpServletRequest);
         //限流
-        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, (int)Math.ceil(1.0 / QPS) + "秒内只能提交一次操作");
+        RRateLimiter rateLimiter = redissonClient.getRateLimiter(loginUser.getUserAccount());
+        rateLimiter.trySetRate(RateType.OVERALL, 1, TIME_PER_REQ, RateIntervalUnit.SECONDS);
+        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, (TIME_PER_REQ) + "秒内只能提交一次操作");
 
         // 图表数据压缩
         String originData = ExcelUtils.convertExcelToCsv(multipartFile);
@@ -188,7 +194,9 @@ public class AIController {
         //获取当前用户
         User loginUser = userService.getLoginUser(httpServletRequest);
         //限流
-        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, (int)Math.ceil(1.0 / QPS) + "秒内只能提交一次操作");
+        RRateLimiter rateLimiter = redissonClient.getRateLimiter(loginUser.getUserAccount());
+        rateLimiter.trySetRate(RateType.OVERALL, 1, TIME_PER_REQ, RateIntervalUnit.SECONDS);
+        ThrowUtils.throwIf(!rateLimiter.tryAcquire(), ErrorCode.OPERATION_TOO_FREQUENT, (TIME_PER_REQ) + "秒内只能提交一次操作");
 
         // 图表数据压缩
         String originData = ExcelUtils.convertExcelToCsv(multipartFile);

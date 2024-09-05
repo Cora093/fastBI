@@ -24,7 +24,7 @@ public class ZhipuStrategy implements AIStrategy {
     @Override
     public String AIQuestion(String prompt, String question) {
         String AIName = AIConstant.ZHIPU;
-        String AIModel = Constants.ModelChatGLM4;
+        String AIModel = Constants.ModelChatGLM3TURBO;
         log.info(AIName + "开始请求, 模型为:" + AIModel);
 
         String totalResult = "";
